@@ -154,7 +154,7 @@ dashboardPage(
                     ),
                     tags$p(
                       class = "center",
-                      "",
+                      ""
                     ),
                     tags$p(
                       icon("twitter"),
