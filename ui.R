@@ -139,13 +139,56 @@ dashboardPage(
               )),
       tabItem(tabName = "tab_about",
               fluidRow(
-                box(title = "About me",
+                box(title = "About Me",
                     status = "danger",
                     width = "6 col-lg-4",
                     tags$p(
-                      "Get in touch with me on Twitter at",
+                      class = "text-center",
+                      tags$strong("Thanks for checking out my app!")
+                      ),
+                    tags$p(
+                      class = "center",
+                      "I'm a program officer by day in Montreal helping cities",
+                      "in their smart city programming, and by night I'm",
+                      "learning to program in R, with this shiny app being my first!"
+                    ),
+                    tags$p(
+                      class = "center",
+                      "",
+                    ),
+                    tags$p(
+                      icon("twitter"),
+                      "Drop my a line on twitter and let me know what you think!",
                       HTML(paste0("(", tags$a(href = "https://twitter.com/coreypembleton", 
-                                              "@coreypembleton", target = "_blank"), ","))
+                                              "@coreypembleton", target = "_blank"), ")")),
+                      icon("twitter")
+                    )
+                    ),
+                box(title = "Credit and Thanks",
+                    status = "success",
+                    width = "6 col-lg-4",
+                    tags$p(
+                      "This app simply would not exist if not for",
+                      HTML(paste0(tags$a(href = "apps.garrickadenbuie.com/rstudioconf-2019/", "this amazing template"))),
+                      "developed in the spirit of open source coding by",
+                      HTML(paste0( tags$a(href ="https://garrickadenbuie.com", "Garrick Aden-Buie"))),
+                      "and the remarkable work of countless engineers tirelessly in the R community",
+                      "developing the packages used to make it possible such as shiny, shinydashboard",
+                      "rtweet, plotly, and pretty much the whole of the tidyverse."
+                    )
+                    ),
+                box(title = "About this app",
+                    status = "danger", 
+                    width = "6 col-lg-5",
+                    tags$p(
+                      "I constructed this app by being kindly provided a list",
+                      "of the twitter handles of all (known) candidates running",
+                      "in the 2019 Canadian Federal election by",
+                      HTML(paste0(tags$a(href = "twitter.com/robroc", "Robert Rocha,"))),
+                      "a data journalist at CBC. Tweets are updated every 5 minutes,",
+                      "and all source code for the tweets and the apps development",
+                      "can be found",
+                      HTML(paste0(tags$a(href = "github.com/pembletonc", "on my github page.")))
                     ))
               )
       )
