@@ -2,21 +2,49 @@
 
 function(session, input, output){ 
   
+  #Global Reactives -----------------------------------------
+  
+  #can adjust n here if slowing things down
+  
+  #tweets <- get_user_tweets(200)
+  
+  temp <- readRDS("./data/tweets1.rds")
+  
+  
   #Values Boxes Front Page  ---------------------------------------
-  #value box for # of tweets per day
+  
+  #value box for # of tweets on day it is viewed
   observe({
    
-    daily_count <- 15
+    daily_count <- temp %>%
+      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
+      filter(created_at == lubridate::today()) %>% 
+      count()
     
     updateBoxValue(session, "daily_count", daily_count) 
 
   })
+
+    observe({
+    
+      #Total number of tweets since August 1st not including RT
+    total_count <- temp %>%
+      filter(is_retweet == FALSE) %>% 
+      nrow()
+
+    updateBoxValue(session, "total_count", total_count) 
+    
+  })
+
   #value box for # of people tweeting
   observe({
+    # Count of all candidates
     
-    daily_users <- 100
-    
-    updateBoxValue(session, "daily_users", daily_users) 
+        total_tweeps <- temp %>% 
+          group_by(user_id) %>% 
+          count()
+          
+    updateBoxValue(session, "total_tweeps", total_tweeps) 
     
   })
   observe({

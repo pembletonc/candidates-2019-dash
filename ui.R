@@ -2,6 +2,7 @@ library(shiny)
 library(shinydashboard)
 library(shinycssloaders)
 library(plotly)
+library(lubridate)
 #note using the forked version of the app from @grrrck ref = @stream-box
 
 dashboardPage(
@@ -49,13 +50,19 @@ dashboardPage(
           # Frontpage - boxes - start-----
           valueBox(
             inputId = "daily_count",
-            "—", " Tweets Today",
+            "—", "Tweets Today",
             color = "purple",
             icon = icon("comment-dots"),
             width = 3),
           valueBox(
-            inputId = "daily_users",
-            "—", " Candidates Tweeted Today",
+            inputId = "total_count",
+            "—", " Total Tweets Since August 1st, 2019",
+            color = "fuchsia"  ,  
+            icon = icon("comment-dots"),
+            width = 3),
+          valueBox(
+            inputId = "total_tweeps",
+            "—", "# of candidates included",
             color = "fuchsia"  ,  
             icon = icon("user-circle"),
             width = 3),
