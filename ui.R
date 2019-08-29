@@ -109,20 +109,38 @@ dashboardPage(
               withSpinner(plotlyOutput("plotly_tweets_by_day", height = "250px"))
             )
           )
+          # Front Page tweet plots - end ----------------------------------------
+          
+        ),
+        fluidRow(
+          #Frontpage most tweets columns start------------------------------------
+          column(
+            width = 8,
+            offset = 2,
+            class =  "col-md-6 col-md-offset-0 col-lg-4",
+            class = "text-center",
+            tags$h4(HTML(twemoji("2764"), "Most Liked in", TWEET_MOST$text)),
+            withSpinner(uiOutput("dash_most_liked"), proxy.height = "200px")
+          ),
+          column(
+            width = 8,
+            offset = 2,
+            class =  "col-md-6 col-md-offset-0 col-lg-4",
+            class = "text-center",
+            tags$h4(HTML(twemoji("1F31F"), "Most RT in", TWEET_MOST$text)),
+            withSpinner(uiOutput("dash_most_rt"), proxy.height = "200px")
+          ),
+          column(
+            width = 8,
+            offset = 2,
+            class =  "col-md-6 col-md-offset-0 col-lg-4",
+            class = "text-center",
+            tags$h4(HTML(twemoji("1F389"), "Most recent")),
+            withSpinner(uiOutput("dash_most_recent"), proxy.height = "200px")
+          )
+          #Frontpage most tweets columns end--------------------------------------
         )
-        # Front Page tweet plots - end ----------------------------------------
-      ),
-      fluidRow(
-        #Frontpage most tweets columns start------------------------------------
-        column(
-          width = 8,
-          offset = 2,
-          class =  "col-md-6 col-md-offset-0 col-lg-4",
-          class = "text-center",
-          tags$h4(HTML("Most Liked in", TWEET_MOST$text)),
-          withSpinner(uiOutput("dash_most_liked"), proxy.height = "200px")
-        )
-        #Frontpage most tweets columns end--------------------------------------
+        
       ),
       tabItem(tabName = "tab_high_score",
               fluidRow(

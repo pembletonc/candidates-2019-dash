@@ -22,6 +22,14 @@ META <- list(
 )
 
 
+TWEET_MOST <- list(
+  hours = 12,
+  days = 0,
+  minutes = 0,
+  text = "12 hours"
+)
+
+
 ADMINLTE_COLORS <- list(
   "light-blue" = "#6699CC",
   "green"      = "#99C794",

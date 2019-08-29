@@ -98,8 +98,34 @@ get_user_tweets <- function(n){
   
 }
 
-#get_user_tweets(50)
+tweets_in_last <- function(tweets, d = 0, h = 0, m = 15, s = 0){
+  tweets %>% 
+    filter(created_at >= lubridate::now() - lubridate::hours(h+d * 24) - 
+             lubridate::minutes(m) - lubridate::seconds(s))
+}
 
+get_tweet_blockquote <- function(screen_name, status_id, ..., null_on_error = TRUE, theme = "light") {
+  oembed <- list(...)$oembed
+  if (!is.null(oembed) && !is.na(oembed)) return(unlist(oembed))
+  oembed_url <- glue::glue("https://publish.twitter.com/oembed?url=https://twitter.com/{screen_name}/status/{status_id}&omit_script=1&dnt=1&theme={theme}")
+  bq <- possibly(httr::GET, list(status_code = 999))(URLencode(oembed_url))
+  if (bq$status_code >= 400) {
+    if (null_on_error) return(NULL)
+    '<blockquote style="font-size: 90%">Sorry, unable to get tweet ¯\\_(ツ)_/¯</blockquote>'
+  } else {
+    httr::content(bq, "parsed")$html
+  }
+}
+
+
+twemoji <- function(runes, width = "20px") {
+  runes <- tolower(runes)
+  runes <- gsub(" ", "-", runes)
+  runes <- sub("-fe0f$", "", runes) # seems to cause problems with twemoji :shrug:
+  emojis <- glue::glue("https://cdnjs.cloudflare.com/ajax/libs/twemoji/11.2.0/2/svg/{runes}.svg")
+  emojis <- glue::glue('<img src="{emojis}" width = "{width}">')
+  paste(emojis)
+}
 
 tz_global <-  function(tz = NULL) {
   if (!is.null(tz)) return(tz)

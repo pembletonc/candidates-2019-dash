@@ -202,5 +202,46 @@ tweets_most <- reactive({
     
 })
 
+output$dash_most_liked <- renderUI({
+  validate(
+    need(nrow(tweets_most()) > 0,
+         paste("No tweets in", TWEET_MOST$text)
+         ))
+  
+  tweets_most() %>% 
+    arrange(desc(favourites_count)) %>% 
+    slice(1) %>% 
+    pmap(get_tweet_blockquote) %>% 
+    .[[1]] %>% 
+    HTML()
+  
+})
+
+output$dash_most_rt<- renderUI({
+  validate(
+    need(nrow(tweets_most()) > 0,
+         paste("No tweets in", TWEET_MOST$text)
+    ))
+  
+  tweets_most() %>% 
+    arrange(desc(retweet_count)) %>% 
+    slice(1) %>% 
+    pmap(get_tweet_blockquote) %>% 
+    .[[1]] %>% 
+    HTML()
+  
+})
+
+output$dash_most_recent <- renderUI({
+  
+  tweets %>% 
+    arrange(desc(created_at)) %>% 
+    slice(1) %>% 
+    pmap(get_tweet_blockquote) %>% 
+    .[[1]] %>% 
+    HTML()
+})
+
+
 }
 
