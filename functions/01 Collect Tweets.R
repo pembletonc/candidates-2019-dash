@@ -1,6 +1,10 @@
 
 get_user_tweets <- function(n){
   
+  library(rtweet)
+  library(tidyverse)
+  library(glue)
+  
   tweets_saved <- readRDS("./data/tweets.rds")
   #since_id() function not working so doing this to get latest tweet saved
   since_id <- as.character(tweets_saved %>% top_n(status_id, n = 1) %>% select(status_id))
@@ -94,4 +98,11 @@ get_user_tweets <- function(n){
   
 }
 
-get_user_tweets(50)
+#get_user_tweets(50)
+
+
+tz_global <-  function(tz = NULL) {
+  if (!is.null(tz)) return(tz)
+  tz  <- Sys.getenv("TZ")
+  if(tz == "") "UTC" else tz
+}

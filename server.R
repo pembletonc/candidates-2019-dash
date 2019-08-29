@@ -15,88 +15,192 @@ function(session, input, output){
   
   #value box for # of tweets on day it is viewed
   observe({
-   
+    
     daily_count <- temp %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
-      count()
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0)
     
     updateBoxValue(session, "daily_count", daily_count) 
-
-  })
-
-    observe({
     
-      #Total number of tweets since August 1st not including RT
+  })
+  
+  observe({
+    
+    #Total number of tweets since August 1st not including RT
     total_count <- temp %>%
       filter(is_retweet == FALSE) %>% 
-      nrow()
-
+      nrow() %>% 
+      format(big.mark = ",", digits = 0)
+    
     updateBoxValue(session, "total_count", total_count) 
     
   })
-
+  
   #value box for # of people tweeting
   observe({
     # Count of all candidates
     
-        total_tweeps <- temp %>% 
-          group_by(user_id) %>% 
-          count()
-          
-    updateBoxValue(session, "total_tweeps", total_tweeps) 
+    total_tweeps <- temp %>% 
+      group_by(user_id) %>%
+      summarise() %>% 
+      count() 
+    
+    updateBoxValue(session, "total_tweeps", total_tweeps$n) 
     
   })
   observe({
     
-    lib_users <- 100
+    lib_users <- temp %>%
+      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
+      filter(created_at == lubridate::today()) %>% 
+      group_by(party, screen_name) %>% 
+      filter(party == "Liberal") %>% 
+      summarise() %>% 
+      count() 
     
-    updateBoxValue(session, "lib_users", lib_users) 
-    
-  })
-  
-  observe({
-    
-    con_users <- 66
-    
-    updateBoxValue(session, "con_users", con_users) 
-    
-  })
-  
-  observe({
-    
-    ndp_users <- 150
-    
-    updateBoxValue(session, "ndp_users", ndp_users) 
+    updateBoxValue(session, "lib_users", lib_users$n) 
     
   })
   
   observe({
     
-    green_users <- 66
+    con_users <- temp %>%
+      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
+      filter(created_at == lubridate::today()) %>% 
+      group_by(party, screen_name) %>% 
+      filter(party == "Conservative") %>% 
+      summarise() %>% 
+      count() 
     
-    updateBoxValue(session, "green_users", green_users) 
+    updateBoxValue(session, "con_users", con_users$n) 
+    
+  })
+  
+  observe({
+    
+    ndp_users <- temp %>%
+      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
+      filter(created_at == lubridate::today()) %>% 
+      group_by(party, screen_name) %>% 
+      filter(party == "NDP") %>% 
+      summarise() %>% 
+      count() 
+    
+    updateBoxValue(session, "ndp_users", ndp_users$n) 
+    
+  })
+  
+  observe({
+    
+    green_users <- temp %>%
+      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
+      filter(created_at == lubridate::today()) %>% 
+      group_by(party, screen_name) %>% 
+      filter(party == "Green") %>% 
+      summarise() %>% 
+      count() 
+    
+    updateBoxValue(session, "green_users", green_users$n) 
     
   })
   
   # Dashboard plots------------------------------------------------------------
   output$plotly_party_tweet_volume <- renderPlotly({
-    economics %>%
-      plot_ly(x = ~date, color = I("black")) %>% 
-      add_lines(y = ~uempmed) %>% 
-      add_lines(y = ~psavert, color = I("Red"))
-      
-  })
-  
-  
-  output$plotly_tweets_by_day <- renderPlotly({
-    economics %>%
-      plot_ly(x = ~date, color = I("black")) %>% 
-      add_lines(y = ~uempmed) %>% 
-      add_lines(y = ~psavert, color = I("Red"))
     
+    temp %>% 
+      mutate(created_at = lubridate::ymd(as_date(created_at))) %>% 
+      group_by(party, created_at) %>% 
+      count() %>%
+      spread(party, n, fill = 0) %>% 
+      plot_ly(x = ~ created_at, 
+              mode = "marker", type = "scatter",
+              y = ~Liberal,
+              name = 'Liberal', 
+              mode = "marker",
+              color = I("red")) %>% 
+      add_trace(y  = ~Conservative, 
+                name = "Conservative", 
+                mode = "marker",
+                color = I("blue")) %>% 
+      add_trace(y = ~NDP,
+                name = 'NDP', 
+                mode = "marker",
+                color = I("orange")) %>% 
+      add_trace(y = ~Green,
+                name = 'Green', 
+                mode = "marker",
+                color = I("green")) %>% 
+      config(displayModeBar = FALSE) %>% 
+      layout(
+        hovermode = "compare",
+        yaxis = list(title = "Tweets"),
+        legend = list(orientation = "h", 
+                      x = 0.05, y = 0.9)
+      ) %>% 
+      layout(
+        xaxis = list(
+          range = c(lubridate::now(tz_global()) - days(7), now(tz_global())),
+          rangeselector = list(
+            buttons = list(
+              list(
+                count = 1, 
+                label = "Today",
+                step = "day", 
+                stepmode = "todate"),
+              list(
+                count = 1,
+                label = "Yesterday",
+                step = "day",
+                stepmode = "todate"),
+              list(
+                count = 7,
+                label = "week",
+                step = "day",
+                stepmode = "backward"),
+              list(step = "all", label  = "All"))),
+          rangeslider = list(type = "date")
+        
+      ))
+  
+  
+  
+  
   })
+
+
+output$plotly_tweets_by_day <- renderPlotly({
+
+    temp %>% 
+    mutate(created_at = lubridate::ymd(as_date(created_at))) %>%
+    filter(created_at > "2019-07-31") %>% 
+    group_by(party, created_at) %>% 
+    count() %>%
+    spread(party, n, fill = 0) %>% 
+    plot_ly(x = ~created_at, type = "bar", 
+              y = ~Liberal,       name = "Liberal", color = I("red")) %>% 
+    add_trace(y = ~Conservative, name = "Conservative", color = I("blue")) %>% 
+    add_trace(y = ~Green,        name = "Green", color = I("green")) %>% 
+    add_trace(y = ~NDP,          name = "NDP", color = I("orange")) %>% 
+    layout(yaxis = list(title = "Tweets"),
+           hovermode = "compare",
+           xaxis = list(title = "Date")
+    ) %>% 
+    config(displayModeBar = FALSE)
   
+})
+
+#Dashboard tweet leaders--------------
+tweets_most <- reactive({
   
-  }
+  temp %>% 
+   tweets_in_last(d = TWEET_MOST$days,
+                  h = TWEET_MOST$hours,
+                  m = TWEET_MOST$minutes)
+    
+})
+
+}
 

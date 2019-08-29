@@ -3,6 +3,7 @@ library(shinydashboard)
 library(shinycssloaders)
 library(plotly)
 library(lubridate)
+library(tidyverse)
 #note using the forked version of the app from @grrrck ref = @stream-box
 
 dashboardPage(
@@ -109,6 +110,19 @@ dashboardPage(
             )
           )
         )
+        # Front Page tweet plots - end ----------------------------------------
+      ),
+      fluidRow(
+        #Frontpage most tweets columns start------------------------------------
+        column(
+          width = 8,
+          offset = 2,
+          class =  "col-md-6 col-md-offset-0 col-lg-4",
+          class = "text-center",
+          tags$h4(HTML("Most Liked in", TWEET_MOST$text)),
+          withSpinner(uiOutput("dash_most_liked"), proxy.height = "200px")
+        )
+        #Frontpage most tweets columns end--------------------------------------
       ),
       tabItem(tabName = "tab_high_score",
               fluidRow(
