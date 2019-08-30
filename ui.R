@@ -4,6 +4,8 @@ library(shinycssloaders)
 library(plotly)
 library(lubridate)
 library(tidyverse)
+library(proustr)
+library(tidytext)
 #note using the forked version of the app from @grrrck ref = @stream-box
 
 dashboardPage(
@@ -23,7 +25,7 @@ dashboardPage(
     sidebarMenu(
       menuItem("Dashboard", tabName = "tab_dashboard", icon = icon("dashboard")),
       menuItem("High Score", tabName = "tab_high_score", icon = icon("trophy")),
-      menuItem("Tweet Wall", tabName = "tab_tweet_wall", icon = icon("stream")),
+      menuItem("Bot Effects", tabName = "tab_bot", icon = icon("robot")),
       menuItem("Media Tweets", tabName = "tab_pic_tweets", icon = icon("images")),
       menuItem("Explore", tabName = "tab_explore", icon = icon("compass")),
       menuItem("About", tabName = "tab_about", icon = icon("info"))
@@ -90,6 +92,12 @@ dashboardPage(
             "—", "Green Candidates Tweeted Today",
             color = "green"  ,  
             icon = icon("pagelines"),
+            width = 3),
+          valueBox(
+            inputId = "ppc_users",
+            "—", "PPC Candidates Tweeted Today",
+            color = "purple"  ,  
+            icon = icon("thumbs-down"),
             width = 3)
           # Frontpage Boxes - End---------------------------------------------
         ),
@@ -101,12 +109,12 @@ dashboardPage(
             tabPanel(
               status = "primary", 
               title = "Tweet Volume by Party", 
-              withSpinner(plotlyOutput("plotly_party_tweet_volume", height = "250px"))
+              withSpinner(plotlyOutput("plotly_party_tweet_volume", height = "450px"))
             ),
             tabPanel(
               status = "success",
               title = "Tweets by Day",
-              withSpinner(plotlyOutput("plotly_tweets_by_day", height = "250px"))
+              withSpinner(plotlyOutput("plotly_tweets_by_day", height = "450px"))
             )
           )
           # Front Page tweet plots - end ----------------------------------------
@@ -145,37 +153,53 @@ dashboardPage(
       tabItem(tabName = "tab_high_score",
               fluidRow(
                 box(
-                 title = "placeholder box", 
+                 title = "Top Tweeters", 
                  status = "info",
-                 width = "6 col-lg-4"
-                )
+                 width = "6 col-lg-4",
+                 tags$div(
+                   class = "scroll-overflow-x",
+                   withSpinner(uiOutput("top_tweeters"))
+                 ),
+                 helpText("Weighted average of RT (2x) and favourites (1x) per tweet")
+              ),
+              box(
+                width = "6 col-lg-4",
+                status = "danger",
+                title  = "Top Hashtags",
+                withSpinner(uiOutput("top_hashtags")),
+                helpText("Times hashtag was used relative to most popular hastag")
+              ),
+              box(
+                width = "6 col-lg-4",
+                status = "success",
+                title  = "Top Words", 
+                withSpinner(uiOutput("top_words")),
+                helpText("Times word was used relative to top word")
+              )
               )),
-      tabItem(tabName = "tab_tweet_wall",
+      tabItem(tabName = "tab_bot",
               fluidRow(
                 box(
-                  title = "placeholder box", 
+                  title = "Coming Soon - see who's tweets are most impacted by bots!", 
                   status = "warning",
                   width = "6 col-lg-4"
                 )
               )),
+      
+      #tab_pic_tweets---------------------------------------------------------
       tabItem(tabName = "tab_pic_tweets",
               class = "text-center",
-              fluidRow(
-                box(
-                  title = "placeholder box", 
-                  status = "success",
-                  width = "6 col-lg-4"
-                )
-              )),
+              tags$h1(HTML("Tweets with", twemoji("1F5BC", width = "42px"))),
+              shinyThings::paginationUI("pic_tweets", width = 12, offset = 0),
+              withSpinner(uiOutput("pic_tweets_wall"), type = 3, color.background = "#F5F5F5"),
+              shinyThings::pagerUI("pic_tweets", centered = TRUE)
+              ),
+      
       tabItem(tabName = "tab_explore",
-              class = "text-center",
               fluidRow(
-                box(
-                  title = "placeholder box", 
-                  status = "primary",
-                  width = "6 col-lg-4"
+                tweetExplorerUI("tweet_table", collapsed = TRUE, status = "success")
                 )
-              )),
+              ),
       tabItem(tabName = "tab_about",
               fluidRow(
                 box(title = "About Me",
@@ -187,13 +211,30 @@ dashboardPage(
                       ),
                     tags$p(
                       class = "center",
-                      "I'm a program officer by day in Montreal helping cities",
-                      "in their smart city programming, and by night I'm",
-                      "learning to program in R, with this shiny app being my first!"
+                      "Hi! Thanks for checking out my app.",
+                      "Being able to see what different politicians are saying",
+                      "on twitter is becoming increasingly important, so I",
+                      "made this app for all people on twitter or not to be able",
+                      "to explore their tweets, and check out some small analytics",
+                      "around them."
                     ),
                     tags$p(
                       class = "center",
-                      ""
+                      "While I'm partisan, and carry certain political values,",
+                      "I have tried to make this app as neutral as possible.",
+                      "I have some concerns over hate speech being propogated by",
+                      "certain political parties and individuals, and I may choose",
+                      "to filter these individuals and parties out of the analysis",
+                      "at a later date."
+                    ),
+                    tags$p(
+                      class = "center",
+                      "Building this app, or rather following a very detailed",
+                      "template provided by a professional engineer",
+                      "has been largely a learning process for myself, and I'm",
+                      "still going to work to try to speed up the app, improve",
+                      "the style and functionality, and give others an opportunity",
+                      "to collaborate together to make this as useful as possible!"
                     ),
                     tags$p(
                       icon("twitter"),
@@ -218,13 +259,15 @@ dashboardPage(
                     ),
                 box(title = "About this app",
                     status = "danger", 
-                    width = "6 col-lg-5",
+                    width = "6 col-lg-4",
                     tags$p(
                       "I constructed this app by being kindly provided a list",
                       "of the twitter handles of all (known) candidates running",
                       "in the 2019 Canadian Federal election by",
                       HTML(paste0(tags$a(href = "twitter.com/robroc", "Robert Rocha,"))),
-                      "a data journalist at CBC. Tweets are updated every 5 minutes,",
+                      "a data journalist at CBC. He nor his organization have professional or personal",
+                      "responsibility towards this app, he only shared the table.",
+                      "Tweets are updated every 5 minutes,",
                       "and all source code for the tweets and the apps development",
                       "can be found",
                       HTML(paste0(tags$a(href = "github.com/pembletonc", "on my github page.")))

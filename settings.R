@@ -53,3 +53,5 @@ ADMINLTE_COLORS <- list(
   "info"       = "#a3c1e0",
   "warning"    = "#FAC863"
 )
+
+BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
