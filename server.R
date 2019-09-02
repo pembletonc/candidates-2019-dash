@@ -1,12 +1,12 @@
 
-
 function(session, input, output){ 
   
+
   #Global Reactives -----------------------------------------
   
   #can adjust n here if slowing things down
   
-  tweets <- get_user_tweets(200)
+  tweets <- get_user_tweets(20)
   
   #temp <- readRDS("./data/tweets.rds")
     #Values Boxes Front Page  ---------------------------------------

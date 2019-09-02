@@ -1,12 +1,3 @@
-library(shiny)
-library(shinydashboard)
-library(shinycssloaders)
-library(plotly)
-library(lubridate)
-library(tidyverse)
-library(proustr)
-library(tidytext)
-#note using the forked version of the app from @grrrck ref = @stream-box
 
 dashboardPage(
   # Dashboard Page Setup ----------------------------------------------------

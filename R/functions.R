@@ -1,14 +1,11 @@
-
-
-
 get_user_tweets <- function(n){
   
   library(rtweet)
   library(tidyverse)
   library(glue)
   
-  tweets_saved <- readRDS("./data/tweets.rds")
-  
+  #tweets_saved <- readRDS("data/tweets.rds")
+  tweets_saved <- readRDS(TWEETS_FILE)
   #since_id() function not working so doing this to get latest tweet saved
   since_id <- as.character(tweets_saved %>% top_n(status_id, n = 1) %>% select(status_id))
   
@@ -16,7 +13,7 @@ get_user_tweets <- function(n){
   #function to get timelines for each user set at n amount
   get_timeline_unlimited <- function(users, n){
     
-
+    
     if (length(users) ==0){
       return(NULL)
     }
@@ -42,7 +39,7 @@ get_user_tweets <- function(n){
                                      parse = FALSE, 
                                      since_id = since_id
         )
-
+        
         rl <- rate_limit(query = "get_timeline")
       }else{
         tweets_first <- NULL
@@ -90,10 +87,10 @@ get_user_tweets <- function(n){
   #join updated tweets to party and riding
   new_tweets_only <- new_tweets_only %>% 
     left_join(handles_only, by = c("screen_name" = "twitter_handle"))
- 
+  
   updated_tweets <- bind_rows(tweets_saved, new_tweets_only)
   
-  saveRDS(updated_tweets, "./data/tweets.rds")
+  saveRDS(updated_tweets, file = TWEETS_FILE)
   
   
   return(updated_tweets)

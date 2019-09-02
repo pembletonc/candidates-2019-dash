@@ -1,6 +1,6 @@
 # ---- Library ----
 library(shiny)
-library(shinydashboard)
+library(shinydashboard) #note using the forked version of shinydashboards from @grrrck ref = @stream-box
 library(forcats)
 library(ggplot2)
 library(plotly)
@@ -18,7 +18,7 @@ source(here::here("R/progress_bar.R"))
 source(here::here("R/module/tweetExplorer.R"))
 
 # ---- Settings ----
-source(here::here("00_settings.R"))
+source(here::here("R/custom/00_settings.R"))
 
 # ---- Color Helpers ----
 BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
