@@ -45,3 +45,21 @@ scale_fill_adminlte <- function(direction = 1, color_other = "grey", ...) {
 }
 
 # ---- Bootstrap App ----
+
+if (!file.exists(here::here("data", "tweets_oembed.rds"))) {
+  message("Getting Tweet oembed HTML, this may take a minute...")
+  if (requireNamespace("furrr", quietly = TRUE)) {
+    message("Using {furrr} to speed up the process")
+    future::plan(future::multiprocess)
+  }
+  tweets <- import_tweets(
+    TWEETS_FILE,
+    tz_global   = tz_global(),
+    start_date  = TWEETS_START_DATE
+  ) %>%
+    tweet_cache_oembed()
+  
+  rm(tweets)
+}
+
+

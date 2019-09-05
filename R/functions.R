@@ -1,3 +1,51 @@
+import_tweets <- function(
+  file,
+  start_date = NULL,
+  blocklist = NULL, 
+  tz_global = tz_global()
+) {
+  tweets <- 
+    readRDS(file) %>% 
+    mutate(created_at = lubridate::with_tz(created_at, tz_global())) %>% 
+    tweets_since(TWEETS_START_DATE) %>%
+    tweets_not_hashdump() %>% 
+    arrange(desc(created_at))
+    
+  if(!"is_quote" %in% names(tweets)) tweets$is_quote <- FALSE
+  if(!"is_retweet" %in% names(tweets)) tweets$is_retweet <- FALSE
+  
+  tweets
+  
+}
+
+
+tweets_since <- function(tweets, since = "2019-08-01", tz = NULL) {
+  if (is.null(since)) return(tweets)
+  if (is.character(since)) since <- lubridate::ymd_hms(since, truncated = 3, tz = tz_global(tz))
+  tweets %>%
+    filter(created_at >= since)
+}
+
+tweets_in_last <- function(tweets, d = 0, h = 0, m = 15, s = 0){
+  tweets %>% 
+    filter(created_at >= lubridate::now() - lubridate::hours(h+d * 24) - 
+             lubridate::minutes(m) - lubridate::seconds(s))
+}
+
+
+tweets_not_hashdump <- function(tweets) {
+  tweets %>%
+    mutate(n_hash = map_int(hashtags, length)) %>%
+    filter(n_hash <= 7) %>%
+    select(-n_hash)
+}
+
+tz_global <- function(tz = NULL) {
+  if (!is.null(tz)) return(tz)
+  tz <- Sys.getenv("TZ")
+  if (tz == "") "UTC" else tz
+}
+
 get_user_tweets <- function(n){
   
   library(rtweet)
@@ -97,11 +145,6 @@ get_user_tweets <- function(n){
   
 }
 
-tweets_in_last <- function(tweets, d = 0, h = 0, m = 15, s = 0){
-  tweets %>% 
-    filter(created_at >= lubridate::now() - lubridate::hours(h+d * 24) - 
-             lubridate::minutes(m) - lubridate::seconds(s))
-}
 
 get_tweet_blockquote <- function(screen_name, status_id, ..., null_on_error = TRUE, theme = "light") {
   oembed <- list(...)$oembed
@@ -231,3 +274,48 @@ masonify_tweets <- function(tweets, id = NULL, class = NULL) {
     )
   )
 }
+
+get_tweet_blockquote <- function(screen_name, status_id, ..., null_on_error = TRUE, theme = "light") {
+  oembed <- list(...)$oembed
+  if (!is.null(oembed) && !is.na(oembed)) return(unlist(oembed))
+  oembed_url <- glue::glue("https://publish.twitter.com/oembed?url=https://twitter.com/{screen_name}/status/{status_id}&omit_script=1&dnt=1&theme={theme}")
+  bq <- possibly(httr::GET, list(status_code = 999))(URLencode(oembed_url))
+  if (bq$status_code >= 400) {
+    if (null_on_error) return(NULL)
+    '<blockquote style="font-size: 90%">Sorry, unable to get tweet ¯\\_(ツ)_/¯</blockquote>'
+  } else {
+    httr::content(bq, "parsed")$html
+  }
+}
+
+
+
+tweet_cache_oembed <- function(tweets, cache = "data/tweets_oembed.rds") {
+  if (fs::file_exists(cache)) {
+    oembed <- readRDS(cache)
+    tweets <- left_join(tweets, oembed, by = "status_id")
+  } else {
+    oembed <- tibble(status_id = character(), oembed = character())
+  }
+  
+  if (!"oembed" %in% names(tweets)) tweets$oembed <- map(seq_len(nrow(tweets)), ~ NULL)
+  
+  is_needed <- map_lgl(tweets$oembed, is.null)
+  if (any(is_needed)) {
+    tweets$oembed[is_needed] <- if (requireNamespace("furrr", quietly = TRUE)) {
+      furrr::future_pmap(tweets[is_needed, ], get_tweet_blockquote, null_on_error = FALSE, .progress = TRUE)
+    } else {
+      pmap(tweets[is_needed, ], get_tweet_blockquote, null_on_error = FALSE)
+    }
+    oembed_new <- tweets %>% select(status_id, oembed)
+    # oembed may be a superset of the oembed we got from these tweets
+    # so the following keeps the old oembed not contained in oembed_new
+    oembed <- bind_rows(
+      semi_join(oembed_new, oembed, by = "status_id"),
+      anti_join(oembed_new, oembed, by = "status_id")
+    )
+    saveRDS(oembed, cache)
+  }
+  return(tweets)
+}
+

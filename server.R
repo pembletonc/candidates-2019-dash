@@ -4,19 +4,33 @@ function(session, input, output){
 
   #Global Reactives -----------------------------------------
   
+  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, TWEETS_FILE, function(file) {
+    x <- import_tweets(
+      file, 
+      tz_global = tz_global(),
+      start_date = TWEETS_START_DATE
+    )
+  })
+  
+  temp <- reactive({ #change to tweets once testing is done
+  req(tweets_all()) #%>% 
+      #tweet_cache_oembed()
+  })
+  
   #can adjust n here if slowing things down
   
-  tweets <- get_user_tweets(20)
-  
-  #temp <- readRDS("./data/tweets.rds")
+  #tweets <- get_user_tweets(20)
+  tweets <- readRDS("./data/tweets.rds")
     #Values Boxes Front Page  ---------------------------------------
   
   #value box for # of tweets on day it is viewed
   observe({
     
-    daily_count <- tweets %>%
+    tweets_in_last <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
-      filter(created_at == lubridate::today()) %>% 
+      filter(created_at == lubridate::today())
+    
+    daily_count <- tweets_in_last %>% 
       count() %>% 
       pull(n) %>% 
       format(big.mark = ",", digits = 0)
