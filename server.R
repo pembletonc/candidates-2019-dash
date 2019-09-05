@@ -13,11 +13,11 @@ function(session, input, output){
   })
   
   temp <- reactive({ #change to tweets once testing is done
-  req(tweets_all()) #%>% 
-      #tweet_cache_oembed()
+  req(tweets_all()) %>% 
+      tweet_cache_oembed()
   })
   
-  #can adjust n here if slowing things down
+  #tweets_oembed <- tweet_cache_oembed(tweets = tweets)
   
   #tweets <- get_user_tweets(20)
   tweets <- readRDS("./data/tweets.rds")
@@ -27,7 +27,7 @@ function(session, input, output){
   observe({
     
     tweets_in_last <- temp() %>%
-      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
+      mutate(created_at = lubridate::ymd(lubridate::today(created_at))) %>% 
       filter(created_at == lubridate::today())
     
     daily_count <- tweets_in_last %>% 
@@ -42,10 +42,11 @@ function(session, input, output){
   observe({
     
     #Total number of tweets since August 1st not including RT
-    total_count <- tweets %>%
+    total_count <- temp() %>%
       filter(is_retweet == FALSE) %>% 
-      nrow() %>% 
-      format(big.mark = ",", digits = 0)
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
     updateBoxValue(session, "total_count", total_count) 
     
@@ -55,81 +56,93 @@ function(session, input, output){
   observe({
     # Count of all candidates
     
-    total_tweeps <- tweets %>% 
+    total_tweeps <- temp() %>% 
       group_by(user_id) %>%
       summarise() %>% 
-      count() 
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
-    updateBoxValue(session, "total_tweeps", total_tweeps$n) 
+    updateBoxValue(session, "total_tweeps", total_tweeps) 
     
   })
   observe({
     
-    lib_users <- tweets %>%
+    lib_users <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
       filter(party == "Liberal") %>% 
       summarise() %>% 
-      count() 
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
-    updateBoxValue(session, "lib_users", lib_users$n) 
+    updateBoxValue(session, "lib_users", lib_users) 
     
   })
   
   observe({
     
-    con_users <- tweets %>%
+    con_users <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
       filter(party == "Conservative") %>% 
       summarise() %>% 
-      count() 
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
-    updateBoxValue(session, "con_users", con_users$n) 
+    updateBoxValue(session, "con_users", con_users) 
     
   })
   
   observe({
     
-    ndp_users <- tweets %>%
+    ndp_users <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
       filter(party == "NDP") %>% 
       summarise() %>% 
-      count() 
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
-    updateBoxValue(session, "ndp_users", ndp_users$n) 
+    updateBoxValue(session, "ndp_users", ndp_users) 
     
   })
   
   observe({
     
-    green_users <- tweets %>%
+    green_users <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
       filter(party == "Green") %>% 
       summarise() %>% 
-      count() 
+      count()%>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
-    updateBoxValue(session, "green_users", green_users$n) 
+    updateBoxValue(session, "green_users", green_users) 
     
   })
   
   observe({
     
-    ppc_users <- tweets %>%
+    ppc_users <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
       filter(party == "PPC") %>% 
       summarise() %>% 
-      count() 
+      count() %>% 
+      pull(n) %>% 
+      format(big.mark = ",", digits = 0) 
     
-    updateBoxValue(session, "ppc_users", ppc_users$n) 
+    updateBoxValue(session, "ppc_users", ppc_users) 
   })
   
   
