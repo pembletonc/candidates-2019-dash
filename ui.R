@@ -64,7 +64,7 @@ dashboardPage(
             inputId = "lib_users",
             "—", "Liberal Candidates Tweeted Today",
             color = "red"  ,  
-            icon = icon("cannabis"),
+            icon = icon("maple-leaf"),
             width = 3),
           valueBox(
             inputId = "con_users",

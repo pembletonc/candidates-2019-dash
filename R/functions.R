@@ -40,6 +40,18 @@ tweets_not_hashdump <- function(tweets) {
     select(-n_hash)
 }
 
+
+tweets_just <- function(tweets, ...) {
+  vars <- rlang::enquos(...)
+  if (!length(vars)) {
+    tweets %>%
+      select(user_id, status_id, created_at, screen_name, text, party, riding)
+  } else {
+    tweets %>% select(!!!vars)
+  }
+}
+
+
 tz_global <- function(tz = NULL) {
   if (!is.null(tz)) return(tz)
   tz <- Sys.getenv("TZ")

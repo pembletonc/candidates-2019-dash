@@ -12,8 +12,9 @@ function(session, input, output){
     )
   })
   
-  temp <- reactive({ #change to tweets once testing is done
-  req(tweets_all()) %>% 
+  temp<- reactive({
+    req(tweets_all())
+    tweets_all() %>%
       tweet_cache_oembed()
   })
   
@@ -27,7 +28,7 @@ function(session, input, output){
   observe({
     
     tweets_in_last <- temp() %>%
-      mutate(created_at = lubridate::ymd(lubridate::today(created_at))) %>% 
+      mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today())
     
     daily_count <- tweets_in_last %>% 
@@ -42,8 +43,11 @@ function(session, input, output){
   observe({
     
     #Total number of tweets since August 1st not including RT
-    total_count <- temp() %>%
-      filter(is_retweet == FALSE) %>% 
+    total_count_f <- temp() %>%
+      filter(is_retweet == FALSE)
+   
+     total_count <- 
+      total_count_f %>% 
       count() %>% 
       pull(n) %>% 
       format(big.mark = ",", digits = 0) 
@@ -68,9 +72,12 @@ function(session, input, output){
   })
   observe({
     
-    lib_users <- temp() %>%
+    lib_users_today <- temp() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
-      filter(created_at == lubridate::today()) %>% 
+      filter(created_at == lubridate::today())
+    
+    lib_users <- 
+      lib_users_today %>% 
       group_by(party, screen_name) %>% 
       filter(party == "Liberal") %>% 
       summarise() %>% 
@@ -149,7 +156,8 @@ function(session, input, output){
   # Dashboard plots------------------------------------------------------------
   output$plotly_party_tweet_volume <- renderPlotly({
     
-    tweets %>% 
+    temp() %>%
+      tweets_just(created_at, party) %>% 
       mutate(created_at = lubridate::ymd(as_date(created_at))) %>% 
       group_by(party, created_at) %>% 
       count() %>%
@@ -186,6 +194,7 @@ function(session, input, output){
       ) %>% 
       layout(
         xaxis = list(
+          title = "Date",
           range = c(lubridate::now(tz_global()) - days(7), now(tz_global())),
           rangeselector = list(
             buttons = list(
@@ -198,7 +207,7 @@ function(session, input, output){
                 count = 1,
                 label = "Yesterday",
                 step = "day",
-                stepmode = "todate"),
+                stepmode = "backward"),
               list(
                 count = 7,
                 label = "week",
@@ -217,7 +226,8 @@ function(session, input, output){
 
 output$plotly_tweets_by_day <- renderPlotly({
 
-    tweets %>% 
+  temp() %>%
+    tweets_just(created_at, party) %>% 
     mutate(created_at = lubridate::ymd(as_date(created_at))) %>%
     filter(created_at > "2019-07-31") %>% 
     group_by(party, created_at) %>% 
@@ -239,7 +249,7 @@ output$plotly_tweets_by_day <- renderPlotly({
 #Dashboard tweet leaders--------------
 tweets_most <- reactive({
   
-  tweets %>% 
+  temp() %>% 
    tweets_in_last(d = TWEET_MOST$days,
                   h = TWEET_MOST$hours,
                   m = TWEET_MOST$minutes)
