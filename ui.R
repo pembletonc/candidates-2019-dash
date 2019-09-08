@@ -3,7 +3,6 @@ dashboardPage(
   # Dashboard Page Setup ----------------------------------------------------
   title = META$name,
   skin  = "blue",
-  #theme = c(META$theme_css, "custom.css"),
   dashboardHeader(
     titleWidth = 400,
     title = HTML(glue::glue(
@@ -28,14 +27,15 @@ dashboardPage(
       tabItem(
         "tab_dashboard",
         tags$head(
+          tags$meta(name="twitter:card", content="summary"),
           HTML(glue::glue(
             '<meta property="og:title" content="{META$name}">
             <meta property="og:description" content="{META$description}">
             <meta property="og:url" content="{META$app_url}">
             <meta property="og:image" content="{META$app_icon}">
-            <meta name="twitter:card" content="summary">
-            <meta name="twitter:creator" content="@coreypembleton">
-            <meta name="twitter:site" content="https://data-break.netlify.com">
+            <meta name="twitter:card" content="summary" />
+            <meta name="twitter:site" content="https://data-break.netlify.com" />
+            <meta name="twitter:creator" content="@coreypembleton" />
             '
           ))
           # Metadata <head> end-----

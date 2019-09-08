@@ -14,10 +14,7 @@ META <- list(
   # App title, short, shown when sidebar is collapsed, HTML is valid
   logo_mini   = "<em>Vote</em><strong>2019</strong>",
   # Icon for box with count of conference-related tweets
-  
-  skin_color  = "blue-light",
-  
-  theme_css   = c("ocean-next/AdminLTE.css", "ocean-next/_all-skins.css")
+  skin_color  = "blue-light"
   
 )
 

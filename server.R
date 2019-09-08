@@ -20,9 +20,9 @@ function(session, input, output){
   
   #tweets_oembed <- tweet_cache_oembed(tweets = tweets)
   
-  #tweets <- get_user_tweets(20)
-  tweets <- readRDS("./data/tweets.rds")
-    #Values Boxes Front Page  ---------------------------------------
+  #tweets <- get_user_tweets(100)
+  #tweets <- readRDS("./data/tweets.rds")
+  #Values Boxes Front Page  ---------------------------------------
   
   #value box for # of tweets on day it is viewed
   observe({
