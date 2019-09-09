@@ -144,7 +144,7 @@ dashboardPage(
       tabItem(tabName = "tab_high_score",
               fluidRow(
                 box(
-                 title = "Top Tweeters", 
+                 title = "Top Tweeters in Past Week", 
                  status = "info",
                  width = "6 col-lg-4",
                  tags$div(
@@ -156,14 +156,14 @@ dashboardPage(
               box(
                 width = "6 col-lg-4",
                 status = "danger",
-                title  = "Top Hashtags",
+                title  = "Top Hashtags in Past Week",
                 withSpinner(uiOutput("top_hashtags")),
                 helpText("Times hashtag was used relative to most popular hastag")
               ),
               box(
                 width = "6 col-lg-4",
                 status = "success",
-                title  = "Top Words", 
+                title  = "Top Words in Past Week", 
                 withSpinner(uiOutput("top_words")),
                 helpText("Times word was used relative to top word")
               )

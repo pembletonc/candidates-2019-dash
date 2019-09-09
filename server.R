@@ -21,7 +21,7 @@ function(session, input, output){
   #tweets_oembed <- tweet_cache_oembed(tweets = tweets)
   
   #tweets <- get_user_tweets(100)
-  #tweets <- readRDS("./data/tweets.rds")
+  tweets <- readRDS("./data/tweets.rds")
   #Values Boxes Front Page  ---------------------------------------
   
   #value box for # of tweets on day it is viewed
@@ -229,7 +229,6 @@ output$plotly_tweets_by_day <- renderPlotly({
   temp() %>%
     tweets_just(created_at, party) %>% 
     mutate(created_at = lubridate::ymd(as_date(created_at))) %>%
-    filter(created_at > "2019-07-31") %>% 
     group_by(party, created_at) %>% 
     count() %>%
     spread(party, n, fill = 0) %>% 
@@ -289,7 +288,7 @@ output$dash_most_rt<- renderUI({
 
 output$dash_most_recent <- renderUI({
   
-  tweets %>% 
+  tweets_most() %>% 
     arrange(desc(created_at)) %>% 
     slice(1) %>% 
     pmap(get_tweet_blockquote) %>% 
@@ -300,8 +299,9 @@ output$dash_most_recent <- renderUI({
 # Front page top columns end---------------------------------------------------
 
 output$top_tweeters <- renderUI({
-  tweets %>%
-    filter(is_retweet == FALSE) %>% 
+  
+  temp() %>%
+    filter(is_retweet == FALSE, created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     group_by(screen_name, profile_url,profile_image_url) %>% 
     summarise(engagement = (sum(retweet_count) * 2 + sum(favorite_count))/ n()) %>% 
     arrange(desc(engagement)) %>% 
@@ -330,7 +330,8 @@ output$top_tweeters <- renderUI({
 output$top_hashtags <- renderUI({
   
   twh <- 
-    tweets %>% 
+    temp() %>%
+    filter(created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     select(hashtags) %>% 
     unnest(cols = c(hashtags)) %>% 
     count(hashtags, sort = TRUE) %>% 
@@ -349,7 +350,8 @@ output$top_hashtags <- renderUI({
 })
 
 output$top_words <- renderUI({
-  tw <- tweets %>% 
+  tw <- temp() %>% 
+    filter(created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     select(text) %>% 
     mutate(
       text = str_remove_all(text, "@[[:alnum:]_]+\\b"),
@@ -380,9 +382,9 @@ output$top_words <- renderUI({
 pic_tweets_page_break <- 20
 
 tweets_pictures <- reactive({
-  tweets %>%
+  temp() %>%
+    filter(created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     filter(is_retweet == FALSE) %>%
-    arrange(desc(favorite_count)) %>% 
     select(created_at, status_id, screen_name, media_url) %>% 
     filter(!map_lgl(media_url, ~length(.) > 1 || is.na(.)))
 })
@@ -406,7 +408,7 @@ output$pic_tweets_wall <- renderUI({
 
 #Tweet explorer
 
-callModule(tweetExplorer, "tweet_table", reactive({ tweets }), tzone = tz_global())
+callModule(tweetExplorer, "tweet_table", reactive({ temp() }), tzone = tz_global())
 
 }
 

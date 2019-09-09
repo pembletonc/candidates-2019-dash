@@ -10,7 +10,7 @@ library(tidyr)
 library(purrr)
 library(dplyr)
 library(shinycssloaders)
-
+library(aws.s3)
 
 # ---- tweet-conf-dash Functions ----
 source(here::here("R/functions.R"))
