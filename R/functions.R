@@ -58,14 +58,26 @@ tz_global <- function(tz = NULL) {
   if (tz == "") "UTC" else tz
 }
 
+
+
+library(aws.s3)
+
+#tweets_saved <- readRDS("data/tweets.rds")
+#tweets_saved <- readRDS(TWEETS_FILE)
+
 get_user_tweets <- function(n){
   
   library(rtweet)
   library(tidyverse)
   library(glue)
+  library(aws.s3)
   
-  #tweets_saved <- readRDS("data/tweets.rds")
-  tweets_saved <- readRDS(TWEETS_FILE)
+  
+  s3BucketName <- "candidate-tweets-2019"
+  name <- get_bucket(s3BucketName)[[1]][[1]]
+  
+  tweets_saved <- s3readRDS(object = name, bucket = s3BucketName)
+  
   #since_id() function not working so doing this to get latest tweet saved
   since_id <- as.character(tweets_saved %>% top_n(status_id, n = 1) %>% select(status_id))
   
@@ -122,15 +134,16 @@ get_user_tweets <- function(n){
                            encoding = "UTF-8")
   
   #make sure that the handles are the right char length (some links in the mix)
-  handles_only <- handles_orig %>% 
+  handles <- handles_orig %>% 
     filter(!is.na(twitter_handle) & str_length(twitter_handle) <= 15) %>% 
-    mutate(twitter_handle = tolower(twitter_handle))
+    mutate(twitter_handle = tolower(twitter_handle)) %>% 
+    pull(twitter_handle)
   
   #convert to char only
-  handles <- as.character(handles_only$twitter_handle[1:length(handles_only$twitter_handle)])
+  #handles <- as.character(handles_only$twitter_handle[1:length(handles_only$twitter_handle)])
   #import new tweets using function
   
-  tweets <- get_timeline_unlimited(handles, n)
+  tweets <- get_timeline_unlimited(handles, 100)
   
   #clean imported tweets
   tweets <- tweets %>% 
@@ -146,16 +159,22 @@ get_user_tweets <- function(n){
   
   #join updated tweets to party and riding
   new_tweets_only <- new_tweets_only %>% 
-    left_join(handles_only, by = c("screen_name" = "twitter_handle"))
+    left_join(handles, by = c("screen_name" = "twitter_handle"))
   
-  updated_tweets <- bind_rows(tweets_saved, new_tweets_only)
+  tweets <- bind_rows(tweets_saved, new_tweets_only)
   
-  saveRDS(updated_tweets, file = TWEETS_FILE)
+  #save to local
+  saveRDS(tweets, file = TWEETS_FILE)
   
+  #also save to s3
+  s3saveRDS(bucket = s3BucketName, 
+            object = paste0(as.character(substitute(tweets)), ".rds"))
   
-  return(updated_tweets)
+  return(tweets)
   
 }
+
+
 
 
 get_tweet_blockquote <- function(screen_name, status_id, ..., null_on_error = TRUE, theme = "light") {
