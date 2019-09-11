@@ -1,11 +1,14 @@
 import_tweets <- function(
-  file,
   start_date = NULL,
   blocklist = NULL, 
   tz_global = tz_global()
 ) {
+  
+  s3BucketName <- "candidate-tweets-2019"
+  object <- get_bucket(s3BucketName)[[1]][[1]]
+  
   tweets <- 
-    readRDS(file) %>% 
+    s3readRDS(object = object, bucket = s3BucketName) %>% 
     mutate(created_at = lubridate::with_tz(created_at, tz_global())) %>% 
     tweets_since(TWEETS_START_DATE) %>%
     tweets_not_hashdump() %>% 
@@ -60,8 +63,6 @@ tz_global <- function(tz = NULL) {
 
 
 
-library(aws.s3)
-
 #tweets_saved <- readRDS("data/tweets.rds")
 #tweets_saved <- readRDS(TWEETS_FILE)
 
@@ -72,11 +73,20 @@ get_user_tweets <- function(n){
   library(glue)
   library(aws.s3)
   
+  Sys.setenv("AWS_ACCESS_KEY_ID" = "AKIAJI423HJJKAEQREWQ",
+  "AWS_SECRET_ACCESS_KEY" = "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",
+  "AWS_DEFAULT_REGION" = "ca-central-1")
   
   s3BucketName <- "candidate-tweets-2019"
-  name <- get_bucket(s3BucketName)[[1]][[1]]
+  name <- get_bucket(s3BucketName,
+                     "AWS_ACCESS_KEY_ID" = "AKIAJI423HJJKAEQREWQ",
+                     "AWS_SECRET_ACCESS_KEY" = "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",
+                     "AWS_DEFAULT_REGION" = "ca-central-1")[[1]][[1]]
   
-  tweets_saved <- s3readRDS(object = name, bucket = s3BucketName)
+  tweets_saved <- s3readRDS(object = name, bucket = s3BucketName,
+                            "AWS_ACCESS_KEY_ID" = "AKIAJI423HJJKAEQREWQ",
+                            "AWS_SECRET_ACCESS_KEY" = "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",
+                            "AWS_DEFAULT_REGION" = "ca-central-1")
   
   #since_id() function not working so doing this to get latest tweet saved
   since_id <- as.character(tweets_saved %>% top_n(status_id, n = 1) %>% select(status_id))

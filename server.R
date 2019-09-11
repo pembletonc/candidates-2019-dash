@@ -3,31 +3,44 @@ function(session, input, output){
   
 
   #Global Reactives -----------------------------------------
-  
-  tweets_all <- reactiveFileReader(1 * 60 * 1000, session, TWEETS_FILE, function(file) {
+
+  tweets_all <-  reactivePoll(1 * 60 * 1000, session, checkFunc = function() {
+    x <- import_tweets(
+      tz_global = tz_global(),
+      start_date = TWEETS_START_DATE
+    )
+    
+    return(x)
+  },
+  valueFunc = function(){
     x <- import_tweets(
       file, 
       tz_global = tz_global(),
       start_date = TWEETS_START_DATE
     )
-  })
+    
+    return(x)
+  }
+ )
   
-  temp<- reactive({
+
+  tweets <- reactive({
     req(tweets_all())
     tweets_all() %>%
       tweet_cache_oembed()
   })
   
+
   #tweets_oembed <- tweet_cache_oembed(tweets = tweets)
   
   #tweets <- get_user_tweets(100)
-  tweets <- readRDS("./data/tweets.rds")
+  #tweets <- readRDS("./data/tweets.rds")
   #Values Boxes Front Page  ---------------------------------------
   
   #value box for # of tweets on day it is viewed
   observe({
     
-    tweets_in_last <- temp() %>%
+    tweets_in_last <- tweets() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today())
     
@@ -43,7 +56,7 @@ function(session, input, output){
   observe({
     
     #Total number of tweets since August 1st not including RT
-    total_count_f <- temp() %>%
+    total_count_f <- tweets() %>%
       filter(is_retweet == FALSE)
    
      total_count <- 
@@ -60,7 +73,7 @@ function(session, input, output){
   observe({
     # Count of all candidates
     
-    total_tweeps <- temp() %>% 
+    total_tweeps <- tweets() %>% 
       group_by(user_id) %>%
       summarise() %>% 
       count() %>% 
@@ -72,7 +85,7 @@ function(session, input, output){
   })
   observe({
     
-    lib_users_today <- temp() %>%
+    lib_users_today <- tweets() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today())
     
@@ -91,7 +104,7 @@ function(session, input, output){
   
   observe({
     
-    con_users <- temp() %>%
+    con_users <- tweets() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
@@ -107,7 +120,7 @@ function(session, input, output){
   
   observe({
     
-    ndp_users <- temp() %>%
+    ndp_users <- tweets() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
@@ -123,7 +136,7 @@ function(session, input, output){
   
   observe({
     
-    green_users <- temp() %>%
+    green_users <- tweets() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
@@ -139,7 +152,7 @@ function(session, input, output){
   
   observe({
     
-    ppc_users <- temp() %>%
+    ppc_users <- tweets() %>%
       mutate(created_at = lubridate::ymd(lubridate::as_date(created_at))) %>% 
       filter(created_at == lubridate::today()) %>% 
       group_by(party, screen_name) %>% 
@@ -156,7 +169,7 @@ function(session, input, output){
   # Dashboard plots------------------------------------------------------------
   output$plotly_party_tweet_volume <- renderPlotly({
     
-    temp() %>%
+    tweets() %>%
       tweets_just(created_at, party) %>% 
       mutate(created_at = lubridate::ymd(as_date(created_at))) %>% 
       group_by(party, created_at) %>% 
@@ -226,7 +239,7 @@ function(session, input, output){
 
 output$plotly_tweets_by_day <- renderPlotly({
 
-  temp() %>%
+  tweets() %>%
     tweets_just(created_at, party) %>% 
     mutate(created_at = lubridate::ymd(as_date(created_at))) %>%
     group_by(party, created_at) %>% 
@@ -248,7 +261,7 @@ output$plotly_tweets_by_day <- renderPlotly({
 #Dashboard tweet leaders--------------
 tweets_most <- reactive({
   
-  temp() %>% 
+  tweets() %>% 
    tweets_in_last(d = TWEET_MOST$days,
                   h = TWEET_MOST$hours,
                   m = TWEET_MOST$minutes)
@@ -300,7 +313,7 @@ output$dash_most_recent <- renderUI({
 
 output$top_tweeters <- renderUI({
   
-  temp() %>%
+  tweets() %>%
     filter(is_retweet == FALSE, created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     group_by(screen_name, profile_url,profile_image_url) %>% 
     summarise(engagement = (sum(retweet_count) * 2 + sum(favorite_count))/ n()) %>% 
@@ -330,7 +343,7 @@ output$top_tweeters <- renderUI({
 output$top_hashtags <- renderUI({
   
   twh <- 
-    temp() %>%
+    tweets() %>%
     filter(created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     select(hashtags) %>% 
     unnest(cols = c(hashtags)) %>% 
@@ -350,7 +363,7 @@ output$top_hashtags <- renderUI({
 })
 
 output$top_words <- renderUI({
-  tw <- temp() %>% 
+  tw <- tweets() %>% 
     filter(created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     select(text) %>% 
     mutate(
@@ -382,7 +395,7 @@ output$top_words <- renderUI({
 pic_tweets_page_break <- 20
 
 tweets_pictures <- reactive({
-  temp() %>%
+  tweets() %>%
     filter(created_at > c(lubridate::now(tz_global()) - days(7))) %>% 
     filter(is_retweet == FALSE) %>%
     select(created_at, status_id, screen_name, media_url) %>% 
@@ -408,7 +421,7 @@ output$pic_tweets_wall <- renderUI({
 
 #Tweet explorer
 
-callModule(tweetExplorer, "tweet_table", reactive({ temp() }), tzone = tz_global())
+callModule(tweetExplorer, "tweet_table", reactive({ tweets() }), tzone = tz_global())
 
 }
 

@@ -16,9 +16,14 @@ library(aws.s3)
 source(here::here("R/functions.R"))
 source(here::here("R/progress_bar.R"))
 source(here::here("R/module/tweetExplorer.R"))
-
 # ---- Settings ----
 source(here::here("R/custom/00_settings.R"))
+
+AWS_ACCESS_KEY_ID = Sys.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = Sys.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_DEFAULT_REGION = Sys.getenv("AWS_DEFAULT_REGION")
+
+
 
 # ---- Color Helpers ----
 BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")

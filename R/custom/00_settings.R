@@ -70,7 +70,13 @@ BASIC_COLORS <- c("primary", "info", "success", "danger", "warning")
 # to this section if the app is managing the tweet gathering, but I'm "exposing"
 # the global argument just in case you have a very particular setup. Note that
 # the app will look for the following files in the order they appear.
-TWEETS_FILE <- file.path("data", paste0("tweets", ".rds"))
+
+#TWEETS_FILE <- file.path("data", paste0("tweets", ".rds"))
+
+
+#test s3
+s3BucketName <- "candidate-tweets-2019"
+TWEETS_FILE <- get_bucket(s3BucketName)[[1]][[1]]
 
 # Should the app manage tweet updating? If FALSE, assumes that tweets are
 # updated by an external process
@@ -88,6 +94,7 @@ TWEETS_MANAGE_UPDATE_INTERVAL <- 5 * 60
 # below to the correct file name. DON'T COMMIT THIS FILE TO VERSION CONTROL!!
 
 TWEETS_MANAGE_TWITTER_PAT_RDS <- "rtweet_token.rds"
+
 
 if (TWEETS_MANAGE_UPDATES) {
   # Check that TWITTER_PAT is correctly set
