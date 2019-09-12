@@ -5,10 +5,14 @@ import_tweets <- function(
 ) {
   
   s3BucketName <- "candidate-tweets-2019"
-  object <- get_bucket(s3BucketName)[[1]][[1]]
+  object <- get_bucket(s3BucketName,
+                       "AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
+                       "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY"))[[1]][[1]]
   
   tweets <- 
-    s3readRDS(object = object, bucket = s3BucketName) %>% 
+    s3readRDS(object = object, bucket = s3BucketName,
+              "AWS_ACCESS_KEY_ID" = Sys.getenv("AWS_ACCESS_KEY_ID"),
+              "AWS_SECRET_ACCESS_KEY" = Sys.getenv("AWS_SECRET_ACCESS_KEY")) %>% 
     mutate(created_at = lubridate::with_tz(created_at, tz_global())) %>% 
     tweets_since(TWEETS_START_DATE) %>%
     tweets_not_hashdump() %>% 
